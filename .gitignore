@@ -205,3 +205,23 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+
+# ---------------------------------
+# MY PROJECT SPECIFIC IGNORES
+# ---------------------------------
+
+# Ignore the temporary uploads folder in the backend
+backend/uploads/
+
+# Ignore your specific enrollment photo
+student.jpg
+backend/student.jpg
+
+# Ignore ALL images to be safe (so you don't leak photos)
+*.jpg
+*.png
+*.jpeg
+
+# Ignore the specific backend virtual environment if you made one inside backend
+backend/venv/
