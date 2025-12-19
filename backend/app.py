@@ -3,6 +3,7 @@ import cv2
 import json
 import pyodbc
 import numpy as np
+import pickle
 import insightface
 from flask import Flask, request, jsonify
 from insightface.app import FaceAnalysis
@@ -14,6 +15,7 @@ from datetime import datetime
 # ==========================================
 SERVER_NAME = r'ABDULRHMANSEYAM'
 DATABASE_NAME = 'Attendsystem'
+BRAIN_FILE = 'face_encodings.pkl'
 
 app = Flask(__name__)
 
@@ -22,7 +24,7 @@ app = Flask(__name__)
 # ==========================================
 class FaceEngine:
     def __init__(self):
-        print("⏳ FaceEngine: Loading AI Models... (This may take a moment)")
+        print("⏳ FaceEngine: Loading AI Models...")
         self.app = FaceAnalysis(name='buffalo_l', providers=['CPUExecutionProvider'])
         self.app.prepare(ctx_id=0, det_size=(640, 640))
         
@@ -30,7 +32,7 @@ class FaceEngine:
         self.known_names = []
         self.known_ids = []
         
-        self.reload_faces_from_db()
+        self.load_brain_from_file()
 
     def get_db_connection(self):
         conn_str = (
@@ -41,42 +43,41 @@ class FaceEngine:
         )
         return pyodbc.connect(conn_str)
 
-    def reload_faces_from_db(self):
-        print("🔄 FaceEngine: Syncing with Database...")
-        try:
-            conn = self.get_db_connection()
-            cursor = conn.cursor()
-            
-            query = """
-            SELECT id, first_name, last_name, facial_encoding
-            FROM student
-            WHERE facial_encoding IS NOT NULL
-            """
-            
-            cursor.execute(query)
-            rows = cursor.fetchall()
-            
-            self.known_faces.clear()
-            self.known_names.clear()
-            self.known_ids.clear()
+    def load_brain_from_file(self):
+        print(f"🔄 FaceEngine: Loading Brain from {BRAIN_FILE}...")
+        
+        if not os.path.exists(BRAIN_FILE):
+            print(f"⚠️ WARNING: {BRAIN_FILE} not found! Run train.py first.")
+            return
 
-            for row in rows:
+        try:
+            with open(BRAIN_FILE, 'rb') as f:
+                data = pickle.load(f)
+
+            self.known_faces = data['embeddings']
+            raw_labels = data['names']
+            
+            self.known_names = []
+            self.known_ids = []
+
+            for label in raw_labels:
                 try:
-                    encoding_list = json.loads(row.facial_encoding.strip())
-                    encoding = np.array(encoding_list, dtype=np.float32)
-                    full_name = f"{row.first_name} {row.last_name}"
-                    
-                    self.known_faces.append(encoding)
-                    self.known_names.append(full_name)
-                    self.known_ids.append(str(row.id))
+                    if " - " in label:
+                        name, sid = label.rsplit(" - ", 1)
+                    else:
+                        name = label
+                        sid = "Unknown"
+
+                    self.known_names.append(name)
+                    self.known_ids.append(sid)
                 except Exception as e:
-                    print(f"⚠️ Encoding error for student {row.id}: {e}")
-            
-            conn.close()
-            print(f"✅ FaceEngine: Loaded {len(self.known_faces)} students.")
-            
+                    self.known_names.append(label)
+                    self.known_ids.append("Unknown")
+
+            print(f"✅ FaceEngine: Loaded {len(self.known_faces)} faces from file.")
+
         except Exception as e:
-            print(f"❌ Database Error during sync: {e}")
+            print(f"❌ Error loading brain file: {e}")
 
     def verify_face(self, image_path):
         img = cv2.imread(image_path)
@@ -92,23 +93,19 @@ class FaceEngine:
             reverse=True
         )
         target_embedding = faces[0].embedding
+        target_embedding = target_embedding / np.linalg.norm(target_embedding)
 
-        max_score = 0.0
-        best_id = None
-        best_name = None
-        
         if not self.known_faces:
-            return None, "No Known Faces in DB", 0.0
+            return None, "System not trained yet", 0.0
 
-        for i, known_embedding in enumerate(self.known_faces):
-            score = 1 - cosine(known_embedding, target_embedding)
-            if score > max_score:
-                max_score = score
-                best_id = self.known_ids[i]
-                best_name = self.known_names[i]
+        similarities = np.dot(self.known_faces, target_embedding)
+        best_idx = np.argmax(similarities)
+        max_score = float(similarities[best_idx])
 
+        # Threshold
         if max_score > 0.5:
-            return best_id, best_name, max_score
+            return self.known_ids[best_idx], self.known_names[best_idx], max_score
+            
         return None, "Unknown Face", max_score
 
 # ==========================================
@@ -121,22 +118,24 @@ engine = FaceEngine()
 # ==========================================
 @app.route('/')
 def home():
-    return "✅ AMS Server is Running!"
+    return "✅ AMS Server is Running (ID ONLY MODE)!"
 
 @app.route('/kiosk_scan', methods=['POST'])
 def kiosk_scan():
-    if 'image' not in request.files or 'classroom_id' not in request.form:
-        return jsonify({"match": False, "message": "Missing image or classroom ID"}), 400
+    # 1. Get Image
+    if 'image' not in request.files:
+        return jsonify({"match": False, "message": "Missing image"}), 400
 
     file = request.files['image']
-    classroom_id = request.form['classroom_id']
     
+    # Save Temp Image
     temp_path = "temp_scan.jpg"
     try:
         file.save(temp_path)
     except Exception:
         return jsonify({"match": False, "message": "Failed to save image"}), 500
 
+    # 2. RUN AI PREDICTION
     try:
         student_id, student_name, confidence = engine.verify_face(temp_path)
     except Exception as e:
@@ -146,65 +145,24 @@ def kiosk_scan():
         if os.path.exists(temp_path):
             os.remove(temp_path)
 
-    if not student_id:
+    # 3. RETURN RESULT IMMEDIATELY (No DB Checks)
+    if not student_id or student_id == "Unknown":
+        print(f"🕵️ Result: Unknown Face (Confidence: {confidence:.2f})")
         return jsonify({"match": False, "message": "Unknown Face"}), 401
-
-    try:
-        conn = engine.get_db_connection()
-        cursor = conn.cursor()
-
-        # ✅ FIXED QUERY (TIME vs TIME)
-        query = """
-        SELECT TOP 1 s.session_id, c.name
-        FROM class_session s
-        JOIN enrollment e ON s.course_id = e.course_id
-        JOIN course c ON s.course_id = c.id
-        WHERE 
-            e.student_id = ?
-            AND s.classroom_id = ?
-            AND s.session_status = 'Scheduled'
-            AND CAST(s.session_start AS DATE) = CAST(GETDATE() AS DATE)
-            AND CAST(GETDATE() AS TIME) >= CAST(s.attendance_start AS TIME)
-            AND CAST(GETDATE() AS TIME) <= CAST(s.session_end AS TIME)
-        """
-
-        cursor.execute(query, (student_id, classroom_id))
-        session = cursor.fetchone()
-
-        if not session:
-            conn.close()
-            return jsonify({"match": False, "message": "No Active Class Found"}), 403
-
-        session_id, course_name = session
-
-        cursor.execute(
-            "SELECT id FROM attendance_record WHERE session_id = ? AND student_id = ?",
-            (session_id, student_id)
-        )
-
-        if not cursor.fetchone():
-            cursor.execute("""
-                INSERT INTO attendance_record
-                (session_id, student_id, status, marked_at, method)
-                VALUES (?, ?, 'Present', GETDATE(), 'FaceID')
-            """, (session_id, student_id))
-            conn.commit()
-            message = f"Welcome, {student_name}!\nClass: {course_name}"
-        else:
-            message = f"Already Marked!\nClass: {course_name}"
-
-        conn.close()
-        return jsonify({
+    
+    # Success!
+    print(f"✅ IDENTIFIED: {student_name} (ID: {student_id})")
+    
+    return jsonify({
         "match": True,
         "student": student_name,
         "student_id": student_id,   
-        "message": message
+        "message": f"Hello, {student_name}!\nID: {student_id}"
     }), 200
 
-    except Exception as e:
-        print(f"❌ CRITICAL SQL Error: {e}")
-        return jsonify({"match": False, "message": "Server Database Error"}), 500
-
+# ==========================================
+# (Login Routes kept same as before)
+# ==========================================
 @app.route('/login', methods=['POST'])
 def login():
     try:
@@ -218,20 +176,11 @@ def login():
         conn = engine.get_db_connection()
         cursor = conn.cursor()
 
-        # 1. Try to find the user
-        # We check the table schema to see if we need 'name' or 'first_name + last_name'
-        # But to be safe, we will write a query that assumes the same structure as Instructor
-        # If your student table is different (has only 'name'), this query might fail.
-        
-        # SAFE QUERY: Select everything and let Python handle the name
         cursor.execute("SELECT * FROM student WHERE id = ? AND password = ?", (student_id, password))
         user = cursor.fetchone()
-        
         conn.close()
 
         if user:
-            # DYNAMIC NAME HANDLING
-            # We check if the row has 'first_name' or just 'name'
             if hasattr(user, 'first_name') and hasattr(user, 'last_name'):
                 full_name = f"{user.first_name} {user.last_name}"
             elif hasattr(user, 'name'):
@@ -250,12 +199,8 @@ def login():
 
     except Exception as e:
         print(f"❌ Student Login Error: {e}")
-        # This will print the exact error to your terminal so you can see it
         return jsonify({"success": False, "message": "Server Error"}), 500
-    
-# ==========================================
-# 6. ADMIN LOGIN ROUTE (Searches 'admin' table)
-# ==========================================
+
 @app.route('/admin_login', methods=['POST'])
 def admin_login():
     try:
@@ -266,7 +211,6 @@ def admin_login():
         conn = engine.get_db_connection()
         cursor = conn.cursor()
         
-        # 1. Search in the ADMIN table
         query = "SELECT id, full_name, role FROM admin WHERE username = ? AND password = ?"
         cursor.execute(query, (username, password))
         admin_user = cursor.fetchone()
@@ -286,10 +230,6 @@ def admin_login():
         print(f"❌ Admin Login Error: {e}")
         return jsonify({"success": False, "message": "Server Error"}), 500
 
-
-# ==========================================
-# 7. INSTRUCTOR LOGIN ROUTE (Searches 'instructor' table)
-# ==========================================
 @app.route('/instructor_login', methods=['POST'])
 def instructor_login():
     try:
@@ -300,8 +240,6 @@ def instructor_login():
         conn = engine.get_db_connection()
         cursor = conn.cursor()
         
-        # 🔴 CHANGED HERE: 
-        # We now select 'first_name' + 'last_name' because the 'name' column is gone.
         query = """
             SELECT id, (first_name + ' ' + last_name) as full_name, role 
             FROM instructor 
@@ -315,7 +253,6 @@ def instructor_login():
             return jsonify({
                 "success": True, 
                 "message": "Instructor Login Successful",
-                # We format the name nicely: "Prof. Mohamed Hussian"
                 "name": f"{instructor_user.role}. {instructor_user.full_name}",
                 "id": instructor_user.id
             }), 200
@@ -326,15 +263,11 @@ def instructor_login():
         print(f"❌ Instructor Login Error: {e}")
         return jsonify({"success": False, "message": "Server Error"}), 500
 
-# ==========================================
-# 8. STUDENT HISTORY ROUTE (Make sure this is here!)
-# ==========================================
 @app.route('/student_history', methods=['POST'])
 def student_history():
     try:
         student_id = request.form.get('student_id')
         
-        # Fallback: Check JSON if form data is empty (Flutter sometimes sends JSON)
         if not student_id:
             data = request.get_json()
             if data:
@@ -346,7 +279,6 @@ def student_history():
         conn = engine.get_db_connection()
         cursor = conn.cursor()
 
-        # The Query
         query = """
         SELECT 
             c.name, 
@@ -378,7 +310,6 @@ def student_history():
     except Exception as e:
         print(f"❌ History Error: {e}")
         return jsonify({"success": False, "message": "Server Error fetching history"}), 500
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
