@@ -6,7 +6,6 @@ import numpy as np  # NumPy: Used for vector math
 import pickle       # Pickle: Used to read the 'Brain' file
 from flask import Flask, request, jsonify
 from insightface.app import FaceAnalysis 
-from scipy.spatial.distance import cosine
 from datetime import datetime 
 
 # ==========================================
@@ -15,6 +14,10 @@ from datetime import datetime
 SERVER_NAME = r'ABDULRHMANSEYAM'
 DATABASE_NAME = 'Attendsystem'
 BRAIN_FILE = 'face_encodings.pkl' 
+MATCH_THRESHOLD = 0.62
+MIN_SCORE_GAP = 0.03
+MIN_DET_SCORE_VERIFY = 0.60
+MIN_FACE_SIZE_VERIFY = 90
 
 app = Flask(__name__)
 
@@ -25,7 +28,7 @@ class FaceEngine:
     def __init__(self):
         print("⏳ FaceEngine: Loading AI Models...")
         self.app = FaceAnalysis(name='buffalo_l', providers=['CPUExecutionProvider'])
-        self.app.prepare(ctx_id=0, det_size=(640, 640))
+        self.app.prepare(ctx_id=-1, det_size=(640, 640))
         
         self.known_faces = [] 
         self.known_names = []
@@ -53,7 +56,7 @@ class FaceEngine:
             with open(BRAIN_FILE, 'rb') as f:
                 data = pickle.load(f)
 
-            self.known_faces = data['embeddings']
+            self.known_faces = np.asarray(data['embeddings'], dtype=np.float32)
             raw_labels = data['names']
             
             self.known_names = []
@@ -86,24 +89,33 @@ class FaceEngine:
         faces = self.app.get(img)
         if not faces:
             return None, "No Face Detected", 0.0
-        
-        faces.sort(
-            key=lambda x: (x.bbox[2]-x.bbox[0]) * (x.bbox[3]-x.bbox[1]),
-            reverse=True
-        )
-        target_embedding = faces[0].embedding
+        if len(faces) > 1:
+            return None, "Only one face should appear in front of the camera", 0.0
+
+        face = faces[0]
+        det_score = float(getattr(face, 'det_score', 1.0))
+        x1, y1, x2, y2 = face.bbox
+        w = float(x2 - x1)
+        h = float(y2 - y1)
+        if det_score < MIN_DET_SCORE_VERIFY or w < MIN_FACE_SIZE_VERIFY or h < MIN_FACE_SIZE_VERIFY:
+            return None, "Face quality is too low. Move closer and improve lighting", 0.0
+
+        target_embedding = face.embedding
         target_embedding = target_embedding / np.linalg.norm(target_embedding)
 
-        if not self.known_faces:
+        if self.known_faces.size == 0:
             return None, "System not trained yet", 0.0
 
         similarities = np.dot(self.known_faces, target_embedding)
-        best_idx = np.argmax(similarities)
+        best_idx = int(np.argmax(similarities))
         max_score = float(similarities[best_idx])
+        second_score = float(np.partition(similarities, -2)[-2]) if similarities.shape[0] > 1 else -1.0
 
-        if max_score > 0.5:
+        if max_score >= MATCH_THRESHOLD and (max_score - second_score) >= MIN_SCORE_GAP:
             return self.known_ids[best_idx], self.known_names[best_idx], max_score
-            
+        if max_score >= MATCH_THRESHOLD and (max_score - second_score) < MIN_SCORE_GAP:
+            return None, "Ambiguous match. Please retry with better face angle", max_score
+
         return None, "Unknown Face", max_score
 
 # ==========================================
@@ -208,7 +220,8 @@ def kiosk_scan():
             os.remove(temp_path)
 
     if not student_id or student_id == "Unknown":
-        return jsonify({"match": False, "message": "Couldn't Find You!"}), 401
+        safe_message = student_name if isinstance(student_name, str) else "Couldn't Find You!"
+        return jsonify({"match": False, "message": safe_message, "confidence": confidence}), 401
 
     # 3. SMART SCHEDULE ANALYSIS
     try:
@@ -281,20 +294,21 @@ def kiosk_scan():
             # Check duplication
             cursor.execute("SELECT id FROM attendance_record WHERE session_id = ? AND student_id = ?", (s_id, student_id))
             if cursor.fetchone():
-                msg = f"Welcome, {student_name}!\nYou are already marked present."
+                msg = f"Welcome, {student_name} ({student_id})!\nYou are already marked present."
             else:
                 cursor.execute("""
                     INSERT INTO attendance_record (session_id, student_id, status, marked_at, method)
                     VALUES (?, ?, 'Present', GETDATE(), 'FaceID')
                 """, (s_id, student_id))
                 conn.commit()
-                msg = f"Welcome, {student_name}!\nAttendance marked for {c_name} {type_str}.\nFocus to get the best marks!"
+                msg = f"Welcome, {student_name} ({student_id})!\nAttendance marked for {c_name} {type_str}.\nFocus to get the best marks!"
 
             conn.close()
             return jsonify({
                 "match": True,
                 "student": student_name,
                 "student_id": student_id,   
+                "student_display": f"{student_name} ({student_id})",
                 "message": msg
             }), 200
 

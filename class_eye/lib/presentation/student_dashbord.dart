@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:class_eye/Screens/course_detail.dart';
+import 'package:class_eye/presentation/course_detail.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:class_eye/core/api_constants.dart'; // ✅ Importing your core constants

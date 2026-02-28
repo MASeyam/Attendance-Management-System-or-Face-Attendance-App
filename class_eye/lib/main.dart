@@ -1,8 +1,10 @@
+import 'package:class_eye/presentation/auth/admin_login.dart';
+import 'package:class_eye/presentation/auth/student_login.dart';
 import 'package:flutter/material.dart';
 
 // Import your screens
 // ⚠️ CHECK THESE PATHS: Ensure the files exist in these folders
-import 'presentation/instructor_login.dart';
+import 'presentation/auth/instructor_login.dart';
 
 void main() {
   runApp(const AMSApp());

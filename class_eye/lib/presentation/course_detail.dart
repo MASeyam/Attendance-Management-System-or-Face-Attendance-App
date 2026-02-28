@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:class_eye/Screens/student_dashbord.dart';
+import 'package:class_eye/presentation/student_dashbord.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:class_eye/core/api_constants.dart';

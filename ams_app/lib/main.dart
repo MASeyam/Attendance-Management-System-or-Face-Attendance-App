@@ -109,8 +109,9 @@ class _CameraScreenState extends State<CameraScreen> {
   Future<void> _takePhoto() async {
     if (_isUploading ||
         _controller == null ||
-        !_controller!.value.isInitialized)
+        !_controller!.value.isInitialized) {
       return;
+    }
 
     if (_serverIp.isEmpty) {
       _showPopup(

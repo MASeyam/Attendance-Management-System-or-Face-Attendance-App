@@ -1,74 +1,90 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import '../core/api_constants.dart';
-// ⚠️ Ensure this file name matches what you have in your project
-// If you renamed the dashboard file too, update this import!
-import 'package:class_eye/Screens/instractor_dashbord.dart';
+import '../student_dashbord.dart';
+import '../../core/api_constants.dart';
 
-class InstructorLogin extends StatefulWidget {
-  const InstructorLogin({super.key});
+class StudentLogin extends StatefulWidget {
+  const StudentLogin({super.key});
 
   @override
-  State<InstructorLogin> createState() => _InstructorLoginState();
+  State<StudentLogin> createState() => _StudentLoginState();
 }
 
-class _InstructorLoginState extends State<InstructorLogin> {
+class _StudentLoginState extends State<StudentLogin> {
+  // 1. Controllers to capture what the user types
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _studentIdController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  // 2. Variable to control the loading spinner
   bool _isLoading = false;
 
+  // 3. THE LOGIC FUNCTION
   Future<void> _login() async {
+    // A. Check if the text boxes are empty
     if (!_formKey.currentState!.validate()) return;
+
+    // B. Start the loading spinner
     setState(() => _isLoading = true);
 
-    // Endpoint is /instructor_login
-
     try {
+      // C. Send the data to Python
       final response = await http.post(
         Uri.parse(ApiConstants.loginEndpoint),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
-          "username": _usernameController.text.trim(),
+          "student_id": _studentIdController.text.trim(),
           "password": _passwordController.text.trim(),
         }),
       );
 
+      // D. Read the answer from Python
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200 && data['success'] == true) {
+        // ✅ SUCCESS
         if (!mounted) return;
 
-        // Navigate to Instructor Dashboard
+        // Show Welcome Message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Welcome, ${data['name']}!"),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Navigate to the History Screen
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder:
-                (context) => InstructorDashboard(
-                  // Unified variable name: instructorName
-                  instructorName: data['name'] ?? "Instructor",
+                (context) => StudentDashboard(
+                  studentId: _studentIdController.text.trim(),
                 ),
           ),
         );
       } else {
+        // ❌ FAILURE (Wrong Password)
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(data['message'] ?? "Failed"),
+            content: Text(data['message'] ?? "Login failed"),
             backgroundColor: Colors.red,
           ),
         );
       }
     } catch (e) {
+      // ⚠️ ERROR (Server down or wrong IP)
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Connection Error: $e"),
+          content: Text("Connection Error: Is the server running? ($e)"),
           backgroundColor: Colors.red,
         ),
       );
     } finally {
+      // E. Stop the loading spinner
       if (mounted) setState(() => _isLoading = false);
     }
   }
@@ -76,10 +92,7 @@ class _InstructorLoginState extends State<InstructorLogin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Instructor Login"),
-        backgroundColor: Colors.orange,
-      ),
+      appBar: AppBar(title: const Text("Student Login")),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Form(
@@ -87,16 +100,20 @@ class _InstructorLoginState extends State<InstructorLogin> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // STUDENT ID INPUT
               TextFormField(
-                controller: _usernameController,
+                controller: _studentIdController,
+                keyboardType: TextInputType.number, // Number pad only
                 decoration: const InputDecoration(
-                  labelText: "Instructor Username",
+                  labelText: "Student ID",
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.school),
+                  prefixIcon: Icon(Icons.person),
                 ),
-                validator: (val) => val!.isEmpty ? "Required" : null,
+                validator: (value) => value!.isEmpty ? "Enter your ID" : null,
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 20),
+
+              // PASSWORD INPUT
               TextFormField(
                 controller: _passwordController,
                 decoration: const InputDecoration(
@@ -104,22 +121,25 @@ class _InstructorLoginState extends State<InstructorLogin> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.lock),
                 ),
-                obscureText: true,
-                validator: (val) => val!.isEmpty ? "Required" : null,
+                obscureText: true, // Hides the text
+                validator:
+                    (value) => value!.isEmpty ? "Enter your Password" : null,
               ),
               const SizedBox(height: 30),
+
+              // LOGIN BUTTON
               ElevatedButton(
-                onPressed: _isLoading ? null : _login,
+                onPressed: _isLoading ? null : _login, // Disable if loading
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
                   minimumSize: const Size(double.infinity, 50),
+                  backgroundColor: Colors.blueAccent,
                 ),
                 child:
                     _isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
                         : const Text(
                           "LOGIN",
-                          style: TextStyle(color: Colors.white),
+                          style: TextStyle(fontSize: 18, color: Colors.white),
                         ),
               ),
             ],

@@ -1,17 +1,19 @@
 import 'dart:convert';
+import 'package:class_eye/presentation/instractor_dashbord.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'admin_dashbord.dart';
-import '../core/api_constants.dart';
+import '../../core/api_constants.dart';
+// ⚠️ Ensure this file name matches what you have in your project
+// If you renamed the dashboard file too, update this import!
 
-class AdminLogin extends StatefulWidget {
-  const AdminLogin({super.key});
+class InstructorLogin extends StatefulWidget {
+  const InstructorLogin({super.key});
 
   @override
-  State<AdminLogin> createState() => _AdminLoginState();
+  State<InstructorLogin> createState() => _InstructorLoginState();
 }
 
-class _AdminLoginState extends State<AdminLogin> {
+class _InstructorLoginState extends State<InstructorLogin> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -20,6 +22,8 @@ class _AdminLoginState extends State<AdminLogin> {
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
+
+    // Endpoint is /instructor_login
 
     try {
       final response = await http.post(
@@ -35,13 +39,17 @@ class _AdminLoginState extends State<AdminLogin> {
 
       if (response.statusCode == 200 && data['success'] == true) {
         if (!mounted) return;
-        // Navigate to Admin Dashboard
+
+        // Navigate to Instructor Dashboard
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const AdminDashboard()),
-        );
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Welcome ${data['name']} (${data['role']})")),
+          MaterialPageRoute(
+            builder:
+                (context) => InstructorDashboard(
+                  // Unified variable name: instructorName
+                  instructorName: data['name'] ?? "Instructor",
+                ),
+          ),
         );
       } else {
         if (!mounted) return;
@@ -69,8 +77,8 @@ class _AdminLoginState extends State<AdminLogin> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Admin Login"),
-        backgroundColor: Colors.green,
+        title: const Text("Instructor Login"),
+        backgroundColor: Colors.orange,
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -82,9 +90,9 @@ class _AdminLoginState extends State<AdminLogin> {
               TextFormField(
                 controller: _usernameController,
                 decoration: const InputDecoration(
-                  labelText: "Admin Username",
+                  labelText: "Instructor Username",
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.security),
+                  prefixIcon: Icon(Icons.school),
                 ),
                 validator: (val) => val!.isEmpty ? "Required" : null,
               ),
@@ -103,7 +111,7 @@ class _AdminLoginState extends State<AdminLogin> {
               ElevatedButton(
                 onPressed: _isLoading ? null : _login,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
+                  backgroundColor: Colors.orange,
                   minimumSize: const Size(double.infinity, 50),
                 ),
                 child:
