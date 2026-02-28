@@ -1,6 +1,6 @@
 USE [master]
 GO
-/****** Object:  Database [Attendsystem]    Script Date: 12/19/2025 7:25:03 PM ******/
+/****** Object:  Database [Attendsystem]    Script Date: 2/28/2026 10:16:02 PM ******/
 CREATE DATABASE [Attendsystem]
  CONTAINMENT = NONE
  ON  PRIMARY 
@@ -84,7 +84,7 @@ ALTER DATABASE [Attendsystem] SET QUERY_STORE (OPERATION_MODE = READ_WRITE, CLEA
 GO
 USE [Attendsystem]
 GO
-/****** Object:  Table [dbo].[admin]    Script Date: 12/19/2025 7:25:04 PM ******/
+/****** Object:  Table [dbo].[admin]    Script Date: 2/28/2026 10:16:02 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -108,7 +108,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[attempt_log]    Script Date: 12/19/2025 7:25:04 PM ******/
+/****** Object:  Table [dbo].[attempt_log]    Script Date: 2/28/2026 10:16:02 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -126,7 +126,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[attendance_record]    Script Date: 12/19/2025 7:25:04 PM ******/
+/****** Object:  Table [dbo].[attendance_record]    Script Date: 2/28/2026 10:16:02 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -145,7 +145,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[camera]    Script Date: 12/19/2025 7:25:04 PM ******/
+/****** Object:  Table [dbo].[camera]    Script Date: 2/28/2026 10:16:02 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -159,7 +159,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[class_session]    Script Date: 12/19/2025 7:25:04 PM ******/
+/****** Object:  Table [dbo].[class_session]    Script Date: 2/28/2026 10:16:02 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -181,13 +181,13 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[classroom]    Script Date: 12/19/2025 7:25:04 PM ******/
+/****** Object:  Table [dbo].[classroom]    Script Date: 2/28/2026 10:16:02 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[classroom](
-	[id] [int] IDENTITY(1,1) NOT NULL,
+	[id] [int] NOT NULL,
 	[building] [nvarchar](50) NULL,
 	[capacity] [int] NULL,
 	[camera_id] [int] NULL,
@@ -197,7 +197,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[course]    Script Date: 12/19/2025 7:25:04 PM ******/
+/****** Object:  Table [dbo].[course]    Script Date: 2/28/2026 10:16:02 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -214,7 +214,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[course_assignment]    Script Date: 12/19/2025 7:25:04 PM ******/
+/****** Object:  Table [dbo].[course_assignment]    Script Date: 2/28/2026 10:16:02 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -232,7 +232,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[department]    Script Date: 12/19/2025 7:25:04 PM ******/
+/****** Object:  Table [dbo].[department]    Script Date: 2/28/2026 10:16:02 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -246,7 +246,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[enrollment]    Script Date: 12/19/2025 7:25:04 PM ******/
+/****** Object:  Table [dbo].[enrollment]    Script Date: 2/28/2026 10:16:02 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -265,7 +265,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[instructor]    Script Date: 12/19/2025 7:25:04 PM ******/
+/****** Object:  Table [dbo].[instructor]    Script Date: 2/28/2026 10:16:02 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -290,7 +290,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[student]    Script Date: 12/19/2025 7:25:04 PM ******/
+/****** Object:  Table [dbo].[student]    Script Date: 2/28/2026 10:16:02 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -360,10 +360,8 @@ GO
 ALTER TABLE [dbo].[class_session]  WITH CHECK ADD FOREIGN KEY([instructor_id])
 REFERENCES [dbo].[instructor] ([id])
 GO
-ALTER TABLE [dbo].[classroom]  WITH CHECK ADD  CONSTRAINT [FK_Classroom_Camera] FOREIGN KEY([camera_id])
+ALTER TABLE [dbo].[classroom]  WITH CHECK ADD FOREIGN KEY([camera_id])
 REFERENCES [dbo].[camera] ([id])
-GO
-ALTER TABLE [dbo].[classroom] CHECK CONSTRAINT [FK_Classroom_Camera]
 GO
 ALTER TABLE [dbo].[course]  WITH CHECK ADD FOREIGN KEY([department_id])
 REFERENCES [dbo].[department] ([id])
