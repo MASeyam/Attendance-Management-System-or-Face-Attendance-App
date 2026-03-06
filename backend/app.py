@@ -253,7 +253,7 @@ def kiosk_scan():
             conn.close()
             return jsonify({
                 "match": False, 
-                "message": f"Hello {student_name}, you have no classes scheduled for today!"
+                "message": f"Hello {student_name},{student_id}, you have no classes scheduled for today!"
             }), 403
 
         now = datetime.now()
