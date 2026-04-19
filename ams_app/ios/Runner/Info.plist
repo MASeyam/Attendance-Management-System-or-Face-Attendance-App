@@ -43,6 +43,15 @@
 	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>This kiosk uses the camera to capture faces for attendance.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>This kiosk connects to the attendance server on the local network.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 </dict>
