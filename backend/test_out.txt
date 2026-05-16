@@ -1,0 +1,100 @@
+
+======================================================================
+  AMS ENDPOINT TEST SUITE
+======================================================================
+
+[AUTH]
+  [!!] POST   /auth/student/login                                FAIL
+       >> HTTPConnectionPool(host='localhost', port=5001): Read timed out. (read timeout=10)
+  [!!] POST   /auth/instructor/login                             FAIL
+       >> HTTPConnectionPool(host='localhost', port=5001): Read timed out. (read timeout=10)
+  [!!] POST   /auth/admin/login                                  FAIL
+       >> HTTPConnectionPool(host='localhost', port=5001): Read timed out. (read timeout=10)
+
+[STUDENTS]
+  [!!] GET    /students                                          FAIL
+       >> HTTPConnectionPool(host='localhost', port=5001): Read timed out. (read timeout=10)
+  [!!] GET    /students/20225389                                 FAIL
+       >> HTTPConnectionPool(host='localhost', port=5001): Read timed out. (read timeout=10)
+  [!!] GET    /students/20225389/attendance-summary              FAIL
+       >> HTTPConnectionPool(host='localhost', port=5001): Read timed out. (read timeout=10)
+  [!!] GET    /students/20225389/attendance-history              FAIL
+       >> HTTPConnectionPool(host='localhost', port=5001): Read timed out. (read timeout=10)
+  [!!] GET    /students/20225389/schedule                        FAIL
+       >> HTTPConnectionPool(host='localhost', port=5001): Read timed out. (read timeout=10)
+
+[INSTRUCTORS]
+  [!!] GET    /instructors                                       FAIL
+       >> HTTPConnectionPool(host='localhost', port=5001): Read timed out. (read timeout=10)
+  [!!] GET    /instructors/1                                     FAIL
+       >> HTTPConnectionPool(host='localhost', port=5001): Read timed out. (read timeout=10)
+  [!!] GET    /instructors/1/sessions/today                      FAIL
+       >> HTTPConnectionPool(host='localhost', port=5001): Read timed out. (read timeout=10)
+  [!!] GET    /instructors/1/reports                             FAIL
+       >> HTTPConnectionPool(host='localhost', port=5001): Read timed out. (read timeout=10)
+
+[SESSIONS]
+  [!!] GET    /sessions/1/attendance                             FAIL
+       >> HTTPConnectionPool(host='localhost', port=5001): Read timed out. (read timeout=10)
+  [!!] PUT    /sessions/1/open                                   FAIL
+       >> HTTPConnectionPool(host='localhost', port=5001): Read timed out. (read timeout=10)
+  [!!] PUT    /sessions/1/close                                  FAIL
+       >> HTTPConnectionPool(host='localhost', port=5001): Read timed out. (read timeout=10)
+
+[ATTENDANCE]
+  [--] PUT    /attendance/<id>/update                              SKIP (no record in session 1)
+
+[DISPUTES]
+  [!!] GET    /disputes/instructor/1                             FAIL
+       >> HTTPConnectionPool(host='localhost', port=5001): Read timed out. (read timeout=10)
+  [!!] POST   /disputes/create                                   FAIL
+       >> HTTPConnectionPool(host='localhost', port=5001): Read timed out. (read timeout=10)
+
+[COURSES]
+  [!!] GET    /courses                                           FAIL
+       >> HTTPConnectionPool(host='localhost', port=5001): Read timed out. (read timeout=10)
+  [!!] GET    /classrooms                                        FAIL
+       >> HTTPConnectionPool(host='localhost', port=5001): Read timed out. (read timeout=10)
+  [!!] GET    /departments                                       FAIL
+       >> HTTPConnectionPool(host='localhost', port=5001): Read timed out. (read timeout=10)
+
+[NOTIFICATIONS]
+  [!!] GET    /notifications/20225389/student                    FAIL
+       >> HTTPConnectionPool(host='localhost', port=5001): Read timed out. (read timeout=10)
+
+[ADMIN]
+  [!!] GET    /admin/stats                                       FAIL
+       >> HTTPConnectionPool(host='localhost', port=5001): Read timed out. (read timeout=10)
+  [!!] GET    /admin/attendance-logs                             FAIL
+       >> HTTPConnectionPool(host='localhost', port=5001): Read timed out. (read timeout=10)
+
+======================================================================
+  SUMMARY  — 0 PASS  |  23 FAIL  |  1 SKIP
+======================================================================
+
+Endpoint                            Method   Status   Fix Applied
+--------------------------------------------------------------------------------
+Student Login                       POST     FAIL     HTTPConnectionPool(host='localhost', por…
+Instructor Login                    POST     FAIL     HTTPConnectionPool(host='localhost', por…
+Admin Login                         POST     FAIL     HTTPConnectionPool(host='localhost', por…
+All Students                        GET      FAIL     HTTPConnectionPool(host='localhost', por…
+Single Student                      GET      FAIL     HTTPConnectionPool(host='localhost', por…
+Attendance Summary                  GET      FAIL     HTTPConnectionPool(host='localhost', por…
+Attendance History                  GET      FAIL     HTTPConnectionPool(host='localhost', por…
+Schedule                            GET      FAIL     HTTPConnectionPool(host='localhost', por…
+All Instructors                     GET      FAIL     HTTPConnectionPool(host='localhost', por…
+Single Instructor                   GET      FAIL     HTTPConnectionPool(host='localhost', por…
+Today Sessions                      GET      FAIL     HTTPConnectionPool(host='localhost', por…
+Reports                             GET      FAIL     HTTPConnectionPool(host='localhost', por…
+Session Attendance                  GET      FAIL     HTTPConnectionPool(host='localhost', por…
+Open Session                        PUT      FAIL     HTTPConnectionPool(host='localhost', por…
+Close Session                       PUT      FAIL     HTTPConnectionPool(host='localhost', por…
+Update Attendance                   PUT      SKIP     No attendance_id found in session 1
+Instructor Disputes                 GET      FAIL     HTTPConnectionPool(host='localhost', por…
+Create Dispute                      POST     FAIL     HTTPConnectionPool(host='localhost', por…
+All Courses                         GET      FAIL     HTTPConnectionPool(host='localhost', por…
+Classrooms                          GET      FAIL     HTTPConnectionPool(host='localhost', por…
+Departments                         GET      FAIL     HTTPConnectionPool(host='localhost', por…
+Notifications                       GET      FAIL     HTTPConnectionPool(host='localhost', por…
+Admin Stats                         GET      FAIL     HTTPConnectionPool(host='localhost', por…
+Attendance Logs                     GET      FAIL     HTTPConnectionPool(host='localhost', por…

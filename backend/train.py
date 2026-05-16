@@ -83,7 +83,8 @@ def train():
                     embedding = face.embedding / np.linalg.norm(face.embedding)
                     person_embeddings.append(embedding)
                 else:
-                    print(f"   ⚠️ Image {img_name} rejected: Score {face.det_score:.2f}")
+                    score_val = float(getattr(face, 'det_score', 0.0))
+                    print(f"   ⚠️ Image {img_name} rejected: Score {score_val:.2f}")
 
         # Create a single "Mean Prototype" for this student
         if len(person_embeddings) >= MIN_VALID_IMAGES_PER_PERSON:

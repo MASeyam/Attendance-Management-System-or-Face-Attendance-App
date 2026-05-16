@@ -210,6 +210,9 @@ __marimo__/
 # MY PROJECT SPECIFIC IGNORES
 # ---------------------------------
 
+# Claude Code internal data
+.claude/
+
 # Ignore the temporary uploads folder in the backend
 backend/uploads/
 

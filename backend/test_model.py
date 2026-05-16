@@ -20,7 +20,15 @@ WINDOW_SIZE = (1000, 1000)
 
 def run_ultimate_audit():
     print("  Initializing Ultimate Audit Engine (Standardized View)...")
-    
+
+    if not os.path.exists(BRAIN_FILE):
+        print(f"❌ Brain file '{BRAIN_FILE}' not found. Run train.py first.")
+        return
+
+    if not os.path.exists(ROOT_DATASET_DIR):
+        print(f"❌ Dataset directory '{ROOT_DATASET_DIR}' not found.")
+        return
+
     # 1. LOAD & NORMALIZE DATABASE
     with open(BRAIN_FILE, 'rb') as f:
         data = pickle.load(f)

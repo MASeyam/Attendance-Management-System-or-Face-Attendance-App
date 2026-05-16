@@ -48,7 +48,7 @@ SENDER_PASS = os.environ.get("EMAIL_PASS")
 # This will download a model (~300MB) on the very first run only.
 print("⏳ Loading InsightFace AI... (This might take a moment)")
 model = FaceAnalysis(name='buffalo_l', providers=['CPUExecutionProvider'])
-model.prepare(ctx_id=0, det_size=(640, 640))
+model.prepare(ctx_id=-1, det_size=(640, 640))
 
 def get_db_connection():
     return pyodbc.connect(f"Driver={{SQL Server}};Server={SERVER_NAME};Database={DATABASE_NAME};Trusted_Connection=yes;")
